@@ -1,0 +1,188 @@
+FORMAT: 1A
+HOST: http://simpler.one
+
+# Simpler made simpler
+
+Polls is a simple API allowing consumers to view polls and vote in them.
+    
+## Access and Authentication
+The API supports one authentication protocol:
+
+[HTTP Basic Auth](http://en.wikipedia.org/wiki/Basic_access_authentication) over HTTPS
+
+### HTTP Basic Auth
+You should make all requests in the context of a User account. Each User has their own
+unique `username` which must be sent in conjunction with the `password`.
+
+- Username: `username`
+- Password: `password`
+
+Typically, authentication via HTTP Basic is achieved by sending the `Authorization` header in the following format:
+
+```
+Authorization: Basic cDN0ZXcxNDV5M3RhZzQxbjowaHkzNGho
+```
+
+Where `cDN0ZXcxNDV5M3RhZzQxbjowaHkzNGho` is the Base64 representation of the username and password:
+
+```
+base64(username + ':' + password)
+```
+
+The `username` and `password` are the same as found in your user account at the [api dashboard](https://api.simpler.nl).
+
+## Pagination
+Certain endpoints will generate large result sets. To save bandwidth and long processing times, these endpoints will
+paginate the results to reduce the strain on both client and server.
+
+Any endpoint that supports pagination will return 3 attributes to support this:
+
+- `offset` the current offset of the data returned
+- `limit` the number of results to which the output was restricted
+- `count` the total number of results available
+
+If `offset` combined with `limit` is less than the overall `count`, the results have been truncated.
+Therefore, to consume all data you will need to page through the result set.
+
+### Paging
+To paginate through a result set, you can use a combination of 2 parameters:
+
+| Parameter            | Description                          | Notes                                                               |
+|----------------------|--------------------------------------|---------------------------------------------------------------------|
+| `offset`             | Offset the results by a given amount | Integer, defaults to `0`                                            |
+| `limit`              | Limit the number of results returned | Integer, maximum limit is defined in result set headers, defaults to `10`             |
+
+For example, if an endpoint produces 500 results, only the first 300 will be returned (results `0` to `299`).
+In order to retrieve the remaining results, implement the `offset` GET param. In this example, adding `offset=300` to
+the query string parameters.
+
+There are 2 considerations when doing this:
+
+- Results begin at offset `0`. If you're retrieving a report with `limit=300`, page 2 will begin at `offset=300`,
+page 3 at `offset=600`, page 4 at `offset=900`, etc.
+- The reports you generate are based on live data, and could be subject to continuous, incremental changes. If your
+query covers a particularly busy data set, then data inserts or updates may occur between paging.
+
+### Hypermedia
+It can be cumbersome to manage pagination programmatically, especially when attempting to rapidly prototype. To provide
+some helpful assistance, the API will output a `meta` and `links` node for all paginated result sets. Essentially this
+performs all necessary calculations and outputs all relevant information with absolute URI's to assist easier pagination.
+
+```
+"meta": {
+    "pagination": {
+        "total": 1,
+        "count": 1,
+        "per_page": 20,
+        "current_page": 1,
+        "total_pages": 1
+    }
+},
+"links": {
+    "self": "http://api.simpler.dev/category/nl/1?page=1",
+    "first": "http://api.simpler.dev/category/nl/1?page=1",
+    "last": "http://api.simpler.dev/category/nl/1?page=1"
+}
+```
+
+# Products
+text
+## List all products [/products/{?brand,category,limit,offset}]
+
++ Parameters
+    + brand: Samsung (optional) - The brand of the product
+    + category: Wasmachine (optional) - The category of the product
+    + limit: 10 (optional) - The limit of the query result
+    + offset: 3 (optional) - The offset of the query result
+
+### List Products [GET]
+Return a list with products
+
++ Response 200 (application/json)
+
+        [
+            {
+            "id": 4086,
+            "icecat_id": 13580401,
+            "eancode": 8806071760773,
+            "brand": "Samsung",
+            "brand_id": 0,
+            "title": "Samsung RSA1UTMG",
+            "category": "amerikaanse koelkasten",
+            "category_id": 0,
+            "subcategory": "",
+            "description": "Deze Side by side met A+ energielabel voldoet aan strenge milieunormen. Naast strak design biedt dit het luxe model complete functionaliteit en verregaande prestaties. Via het elektronische bedieningspaneel heeft u direct toegang tot alle instellingen van zowel het koel-als het vriesgedeelte. Dankzij No Frost is de noodzaak om regelmatig te ontdooien verleden tijd. Verder is het model uitgerust met comfortabele eigenschappen zoals een water- en ijsblokjesdispenser. In dit model combineert Samsung technologie met design en gebruiksgemak.<br /><br /><b>No Frost</b><br />Alle Samsung side by side koelkasten zijn voorzien van No Frost technologie. Hierdoor wordt ijsvorming in de vriezer voorkomen en behoort ontdooien van de vriezer tot het verleden.<br /><br /><b>Water & IJsdispenser</b><br />In onze luxe modellen vindt u een waterdispenser met een vaste wateraansluiting én een ijsblokjesautomaat. Naar keuze tapt u koud water, ijsblokjes of ‘crushed ice’.",
+            "img_small": "images/products/5514424855444.jpg",
+            "img_medium": "images/products/5514424868782.jpg",
+            "img_large": "images/products/551442486894a.jpg",
+            "minimum_price": 0,
+            "minimum_price_be": 0,
+            "shop_amount": 0,
+            "shop_amount_be": 0,
+            "simpler_score": 0,
+            "simpler_says": "",
+            "descr_short": "RSA1UTMG - A+, No Frost, Multi Flow, 501 L, Metal Graphite",
+            "alias": "samsung-rsa1utmg",
+            "sku": "RSA1UTMG1",
+            "release_date": "2012-03-22",
+            "built_in_type": "",
+            "energy_label": "A+",
+            "capacity": 0,
+            "spin_speed": 0,
+            "soundlevel": 0,
+            "soundlevel_centrifuge": 0,
+            "heatpump": "",
+            "highlighted": 0,
+            "modify_date": "2016-07-29 06:22:47",
+            "added_date": "0000-00-00 00:00:00",
+            "from_icecat": 1,
+            "gender": null
+          }
+        ]
+        
+## Categories [/categories/{short_code}]
+
++ Parameters
+    + short_code: NL - The language shortcode in which the category is showed.
+
+### List all Categories [GET]
+Categories are managed with `short_code` or with the `all` tag. Each store has its own translations 
+for categories. This endpoint will return a list with the categories. It will either be all the categories for
+a single language, or an output for `all` the languages.
+
++ Response 200 (application/json)
+    + Attributes
+        + data (array)
+            + (object)
+                + type : category (string)
+                + id : 1 (number)
+                + attributes
+                    + category_id : 1 (number)
+                    + value : Baby & Child (string)
+                + language
+                    + id : 1 (number)
+                    + code : english (string)
+                    + short_code : EN (string)
+        
+## Category [/category/{short_code}/{id}]
+
++ Parameters
+    + short_code: NL - The language shortcode of the category
+    + id: 1 - The category of the category
+    
+### Retreive a category [GET]
+Outputs the specified category.
+
++ Response 200 (application/json; charset=utf-8)
+    + Attributes
+        + data (array)
+            + (object)
+                + type : category (string)
+                + id : 1 (number)
+                + attributes
+                    + category_id : 1 (number)
+                    + value : Baby & Child (string)
+                + language
+                    + id : 1 (number)
+                    + code : english (string)
+                    + short_code : EN (string)
